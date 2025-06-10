@@ -26,6 +26,90 @@
             border-radius: 5px;
             padding: 15px;
         }
+
+        #document-upload-section {
+            max-width: 600px;
+            margin: 0 auto 20px auto;
+            background-color: #e8f4fd;
+            border: 1px solid #bee5eb;
+            border-radius: 5px;
+            padding: 15px;
+        }
+
+        #document-upload-section h3 {
+            margin-top: 0;
+            color: #0c5460;
+        }
+
+        #upload-area {
+            margin-bottom: 15px;
+        }
+
+        #document-upload {
+            margin-right: 10px;
+            padding: 5px;
+        }
+
+        #upload-btn, #clear-docs-btn {
+            padding: 8px 15px;
+            margin-right: 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        #upload-btn {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        #upload-btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        #clear-docs-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        #clear-docs-btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        #uploaded-docs {
+            margin-top: 15px;
+        }
+
+        #docs-list {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        #docs-list li {
+            margin: 5px 0;
+            color: #155724;
+        }
+
+        #upload-status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 3px;
+            display: none;
+        }
+
+        .status-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
         
         #api-key-input {
             width: 70%;
@@ -140,6 +224,20 @@
         <br><br>
         <small>Get your free key at: <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a></small>
     </div>
+
+    <div id="document-upload-section">
+        <h3>📄 Upload Legal Documents for Reference</h3>
+        <div id="upload-area">
+            <input type="file" id="document-upload" accept=".pdf,.doc,.docx,.txt" multiple>
+            <button id="upload-btn" onclick="uploadDocuments()" disabled>Upload Documents</button>
+            <button id="clear-docs-btn" onclick="clearDocuments()" disabled>Clear All Documents</button>
+        </div>
+        <div id="uploaded-docs">
+            <strong>Uploaded Documents:</strong>
+            <ul id="docs-list"></ul>
+        </div>
+        <div id="upload-status"></div>
+    </div>
     
     <div id="chatbot-container">
         <div id="chat-dialog">
@@ -155,6 +253,7 @@
 
     <script>
         let apiKey = '';
+        let uploadedDocuments = [];
         const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
         
         // Legal-focused system prompt
@@ -173,23 +272,131 @@
             const setupDiv = document.getElementById('api-key-setup');
             const userInput = document.getElementById('user-input');
             const sendButton = document.getElementById('send-button');
+            const uploadBtn = document.getElementById('upload-btn');
+            const clearDocsBtn = document.getElementById('clear-docs-btn');
             
             apiKey = keyInput.value.trim();
             
             if (apiKey) {
                 // Store in session (not persistent for security)
                 setupDiv.classList.add('setup-complete');
-                setupDiv.innerHTML = '<strong>✓ API Key Set!</strong> You can now chat with Otterbot.';
+                setupDiv.innerHTML = '<strong>✓ API Key Set!</strong> You can now chat with Otterbot and upload documents.';
                 
-                // Enable chat interface
+                // Enable chat interface and document upload
                 userInput.disabled = false;
                 sendButton.disabled = false;
+                uploadBtn.disabled = false;
+                clearDocsBtn.disabled = false;
                 userInput.focus();
                 
-                addMessage("Great! I'm now connected and ready to help with legal language learning. What would you like to know?", false);
+                addMessage("Great! I'm now connected and ready to help with legal language learning. You can also upload legal documents to help me learn proper syntax and vocabulary!", false);
             } else {
                 alert('Please enter a valid API key');
             }
+        }
+
+        async function uploadDocuments() {
+            const fileInput = document.getElementById('document-upload');
+            const uploadStatus = document.getElementById('upload-status');
+            const docsList = document.getElementById('docs-list');
+            
+            if (fileInput.files.length === 0) {
+                showUploadStatus('Please select at least one document to upload.', false);
+                return;
+            }
+            
+            showUploadStatus('Processing documents...', true);
+            
+            try {
+                for (let file of fileInput.files) {
+                    const content = await readFileContent(file);
+                    const processedDoc = {
+                        name: file.name,
+                        type: file.type,
+                        size: file.size,
+                        content: content,
+                        uploadedAt: new Date().toISOString()
+                    };
+                    
+                    uploadedDocuments.push(processedDoc);
+                    
+                    // Add to display list
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+                    docsList.appendChild(listItem);
+                }
+                
+                showUploadStatus(`Successfully uploaded ${fileInput.files.length} document(s)! The AI can now reference this content for legal language learning.`, true);
+                
+                // Clear file input
+                fileInput.value = '';
+                
+                // Add notification to chat
+                addMessage(`📄 ${fileInput.files.length} legal document(s) uploaded successfully! I can now reference this content to better understand legal syntax and vocabulary. Ask me questions about the documents or legal language patterns!`, false);
+                
+            } catch (error) {
+                console.error('Error uploading documents:', error);
+                showUploadStatus('Error processing documents. Please try again.', false);
+            }
+        }
+
+        async function readFileContent(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    resolve(e.target.result);
+                };
+                
+                reader.onerror = function() {
+                    reject(new Error('Failed to read file'));
+                };
+                
+                // Read as text for most formats
+                if (file.type.includes('text') || file.name.endsWith('.txt')) {
+                    reader.readAsText(file);
+                } else {
+                    // For other formats, we'll read as text and handle what we can
+                    reader.readAsText(file);
+                }
+            });
+        }
+
+        function clearDocuments() {
+            uploadedDocuments = [];
+            const docsList = document.getElementById('docs-list');
+            docsList.innerHTML = '';
+            
+            showUploadStatus('All documents cleared.', true);
+            addMessage('📄 All uploaded documents have been cleared from memory.', false);
+        }
+
+        function showUploadStatus(message, isSuccess) {
+            const uploadStatus = document.getElementById('upload-status');
+            uploadStatus.textContent = message;
+            uploadStatus.className = isSuccess ? 'status-success' : 'status-error';
+            uploadStatus.style.display = 'block';
+            
+            // Hide after 5 seconds
+            setTimeout(() => {
+                uploadStatus.style.display = 'none';
+            }, 5000);
+        }
+
+        function getDocumentContext() {
+            if (uploadedDocuments.length === 0) return '';
+            
+            let context = '\n\nREFERENCE DOCUMENTS:\n';
+            context += 'The user has uploaded the following legal documents for reference. Use these to understand proper legal syntax, vocabulary, and language patterns:\n\n';
+            
+            uploadedDocuments.forEach((doc, index) => {
+                context += `Document ${index + 1}: ${doc.name}\n`;
+                context += `Content excerpt: ${doc.content.substring(0, 2000)}...\n\n`; // Limit content to avoid token limits
+            });
+            
+            context += 'Please reference these documents when explaining legal language, syntax, or vocabulary. Use similar language patterns and terminology when appropriate.';
+            
+            return context;
         }
         
         function addMessage(message, isUser = false, isError = false) {
@@ -243,8 +450,9 @@
             document.getElementById('chat-dialog').appendChild(loadingDiv);
             
             try {
-                // Create the prompt
-                const fullPrompt = `${LEGAL_SYSTEM_PROMPT}\n\nUser message: ${message}\n\nPlease respond helpfully while focusing on legal language learning and communication.`;
+                // Create the prompt with document context
+                const documentContext = getDocumentContext();
+                const fullPrompt = `${LEGAL_SYSTEM_PROMPT}${documentContext}\n\nUser message: ${message}\n\nPlease respond helpfully while focusing on legal language learning and communication. If relevant, reference the uploaded documents to provide examples of proper legal syntax and vocabulary.`;
                 
                 // Call Gemini API directly
                 const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
@@ -269,22 +477,32 @@
                 
                 if (response.ok) {
                     const data = await response.json();
+                    console.log('API Response:', data); // Debug log
                     
                     if (data.candidates && data.candidates[0] && data.candidates[0].content) {
                         const botResponse = data.candidates[0].content.parts[0].text;
                         addMessage(botResponse);
                     } else {
-                        addMessage('Sorry, I received an unexpected response format.', false, true);
+                        console.log('Unexpected response format:', data);
+                        addMessage('Sorry, I received an unexpected response format. Check console for details.', false, true);
                     }
                 } else {
                     const errorData = await response.json();
-                    console.error('API Error:', errorData);
+                    console.error('API Error Details:', errorData);
+                    console.error('Status Code:', response.status);
                     
+                    let errorMessage = '';
                     if (response.status === 400) {
-                        addMessage('API Error: Please check your API key or try again.', false, true);
+                        errorMessage = `API Error (400): ${errorData.error?.message || 'Bad request - check your API key'}`;
+                    } else if (response.status === 403) {
+                        errorMessage = `API Error (403): ${errorData.error?.message || 'Forbidden - check your API key permissions'}`;
+                    } else if (response.status === 429) {
+                        errorMessage = 'Rate limit exceeded. Please wait a minute and try again.';
                     } else {
-                        addMessage(`Error: ${errorData.error?.message || 'Unknown error occurred'}`, false, true);
+                        errorMessage = `Error (${response.status}): ${errorData.error?.message || 'Unknown error occurred'}`;
                     }
+                    
+                    addMessage(errorMessage, false, true);
                 }
                 
             } catch (error) {
