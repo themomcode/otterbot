@@ -383,14 +383,190 @@
 
         // API Key Management
         function saveGeminiKey() {
-            const key = document.getElementById('geminiApiKey').value;
-            if (key) {
-                geminiApiKey = key;
-                localStorage.setItem('geminiApiKey', key);
-                showStatus('Gemini API key saved successfully!', 'success');
-                document.getElementById('geminiApiKey').value = '';
-            }
+    console.log('saveGeminiKey function called'); // Debug log
+    
+    try {
+        // Get the API key input element
+        const apiKeyInput = document.getElementById('gemini-api-key') || 
+                           document.querySelector('input[type="text"]') || 
+                           document.querySelector('input[placeholder*="API"]');
+        
+        if (!apiKeyInput) {
+            throw new Error('API key input element not found');
         }
+        
+        const apiKey = apiKeyInput.value.trim();
+        console.log('API key length:', apiKey.length); // Debug log (don't log actual key)
+        
+        // Validate API key format
+        if (!apiKey) {
+            throw new Error('API key cannot be empty');
+        }
+        
+        if (apiKey.length < 10) {
+            throw new Error('API key appears to be too short');
+        }
+        
+        // Basic Gemini API key format validation (they typically start with certain patterns)
+        if (!apiKey.startsWith('AIza') && !apiKey.includes('google')) {
+            console.warn('API key format may be incorrect - Gemini keys typically start with "AIza"');
+        }
+        
+        // Check if localStorage is available
+        if (typeof(Storage) === "undefined") {
+            throw new Error('localStorage is not supported by this browser');
+        }
+        
+        // Test localStorage access
+        try {
+            localStorage.setItem('test', 'test');
+            localStorage.removeItem('test');
+        } catch (storageError) {
+            throw new Error('localStorage access denied - check browser settings or try non-private mode');
+        }
+        
+        // Save the API key
+        localStorage.setItem('gemini_api_key', apiKey);
+        
+        // Verify it was saved
+        const savedKey = localStorage.getItem('gemini_api_key');
+        if (savedKey !== apiKey) {
+            throw new Error('API key was not saved correctly');
+        }
+        
+        console.log('API key saved successfully');
+        
+        // Update UI to show success
+        showSuccessMessage('API key saved successfully!');
+        
+        // Hide setup section or enable chat
+        const setupSection = document.querySelector('.setup-section') || 
+                            document.getElementById('setup');
+        if (setupSection) {
+            setupSection.style.display = 'none';
+        }
+        
+        // Enable chat interface
+        enableChatInterface();
+        
+    } catch (error) {
+        console.error('Error in saveGeminiKey:', error);
+        showErrorMessage(`Failed to save API key: ${error.message}`);
+        
+        // Optional: Send error to analytics or logging service
+        // trackError('saveGeminiKey', error.message);
+    }
+}
+
+// Helper function to show success messages
+function showSuccessMessage(message) {
+    const existingMessage = document.getElementById('success-message');
+    if (existingMessage) {
+        existingMessage.remove();
+    }
+    
+    const successDiv = document.createElement('div');
+    successDiv.id = 'success-message';
+    successDiv.style.cssText = `
+        background-color: #d4edda;
+        color: #155724;
+        padding: 10px;
+        border: 1px solid #c3e6cb;
+        border-radius: 4px;
+        margin: 10px 0;
+        font-weight: bold;
+    `;
+    successDiv.textContent = message;
+    
+    // Insert after the save button or at top of form
+    const saveButton = document.querySelector('button[onclick*="saveGeminiKey"]') || 
+                      document.querySelector('.save-key-btn');
+    if (saveButton) {
+        saveButton.parentNode.insertBefore(successDiv, saveButton.nextSibling);
+    }
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (successDiv.parentNode) {
+            successDiv.remove();
+        }
+    }, 5000);
+}
+
+// Helper function to show error messages
+function showErrorMessage(message) {
+    const existingMessage = document.getElementById('error-message');
+    if (existingMessage) {
+        existingMessage.remove();
+    }
+    
+    const errorDiv = document.createElement('div');
+    errorDiv.id = 'error-message';
+    errorDiv.style.cssText = `
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 10px;
+        border: 1px solid #f5c6cb;
+        border-radius: 4px;
+        margin: 10px 0;
+        font-weight: bold;
+    `;
+    errorDiv.textContent = message;
+    
+    // Insert after the save button or at top of form
+    const saveButton = document.querySelector('button[onclick*="saveGeminiKey"]') || 
+                      document.querySelector('.save-key-btn');
+    if (saveButton) {
+        saveButton.parentNode.insertBefore(errorDiv, saveButton.nextSibling);
+    }
+    
+    // Auto-remove after 10 seconds
+    setTimeout(() => {
+        if (errorDiv.parentNode) {
+            errorDiv.remove();
+        }
+    }, 10000);
+}
+
+// Helper function to enable chat interface
+function enableChatInterface() {
+    const chatInput = document.querySelector('input[type="text"]:not([placeholder*="API"])') || 
+                     document.getElementById('chat-input');
+    const sendButton = document.querySelector('button[onclick*="send"]') || 
+                      document.querySelector('.send-btn');
+    
+    if (chatInput) {
+        chatInput.disabled = false;
+        chatInput.placeholder = "Type your legal question here...";
+    }
+    
+    if (sendButton) {
+        sendButton.disabled = false;
+    }
+}
+
+// Also add a function to test if the key is already saved on page load
+function checkSavedApiKey() {
+    try {
+        const savedKey = localStorage.getItem('gemini_api_key');
+        if (savedKey && savedKey.length > 10) {
+            console.log('Found saved API key');
+            const setupSection = document.querySelector('.setup-section') || 
+                                document.getElementById('setup');
+            if (setupSection) {
+                setupSection.style.display = 'none';
+            }
+            enableChatInterface();
+            return true;
+        }
+    } catch (error) {
+        console.error('Error checking saved API key:', error);
+    }
+    return false;
+}
+
+// Call on page load
+document.addEventListener('DOMContentLoaded', checkSavedApiKey);
 
         // Legal Dictionary Management
         async function loadLegalDictionaries() {
