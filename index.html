@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Otterbot - Legal AI Assistant</title>
+    <title>Otterbot - Legal AI Assistant with LexPredict Integration</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -56,6 +56,12 @@
         .btn-secondary:hover {
             background: #545b62;
         }
+        .btn-success {
+            background: #28a745;
+        }
+        .btn-success:hover {
+            background: #218838;
+        }
         .legal-features {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -67,6 +73,30 @@
             padding: 20px;
             border-radius: 8px;
             border-left: 4px solid #2196f3;
+        }
+        .dictionary-section {
+            background: #f0f8ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 4px solid #4CAF50;
+        }
+        .dictionary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .dictionary-item {
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            font-size: 0.9em;
+        }
+        .dictionary-item.loaded {
+            background: #d4edda;
+            border-color: #28a745;
         }
         .chat-container {
             border: 1px solid #ddd;
@@ -89,9 +119,9 @@
         .bot-message {
             background: #f1f8e9;
         }
-        .legal-context {
-            background: #fff3e0;
-            border-left: 4px solid #ff9800;
+        .legal-terms-highlight {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
             padding: 10px;
             margin: 10px 0;
             font-size: 0.9em;
@@ -145,37 +175,65 @@
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 2s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>🦦 Otterbot - Legal AI Assistant</h1>
-            <p>AI-powered legal document assistant with CourtListener integration</p>
+            <p>AI-powered legal document assistant with LexPredict Legal Dictionary integration</p>
         </div>
 
         <div class="setup-section">
             <h3>🔧 Setup Required:</h3>
             <div style="margin-bottom: 15px;">
                 <input type="password" id="geminiApiKey" class="api-input" placeholder="Enter Gemini API Key" />
-                <button class="btn" onclick="saveGeminiKey()">Save Gemini Key</button>
+                <button class="btn" onclick="saveGeminiKey()">Save Key</button>
                 <small>Get your free key at: <a href="https://makersuite.google.com/app/apikey" target="_blank">Google AI Studio</a></small>
             </div>
-            <div>
-                <input type="password" id="courtListenerApiKey" class="api-input" placeholder="CourtListener API Key (Optional)" />
-                <button class="btn btn-secondary" onclick="saveCourtListenerKey()">Save CourtListener Key</button>
-                <small>Register at: <a href="https://www.courtlistener.com/api/" target="_blank">CourtListener API</a></small>
+        </div>
+
+        <div class="dictionary-section">
+            <h3>📚 LexPredict Legal Dictionary Integration</h3> 
+            <p>Load legal dictionaries to enhance AI responses with professional legal terminology:</p>
+            <button class="btn btn-success" onclick="loadLegalDictionaries()">
+                <span id="loadingIndicator" style="display: none;" class="loading"></span>
+                Load Legal Dictionaries
+            </button>
+            <button class="btn btn-secondary" onclick="clearDictionaries()">Clear Dictionaries</button>
+            
+            <div class="dictionary-grid" id="dictionaryStatus">
+                <div class="dictionary-item" data-dict="common_law">Common Law Terms</div>
+                <div class="dictionary-item" data-dict="us_code">US Code Terms</div>
+                <div class="dictionary-item" data-dict="courts">US Courts</div>
+                <div class="dictionary-item" data-dict="federal_acts">Federal Acts</div>
+                <div class="dictionary-item" data-dict="accounting">Accounting Terms</div>
+                <div class="dictionary-item" data-dict="financial">Financial Terms</div>
             </div>
+            <p><small>Status: <span id="dictionaryLoadStatus">Not loaded</span></small></p>
         </div>
 
         <div class="legal-features">
             <div class="feature-card">
-                <h4>📚 Legal Research Integration</h4>
-                <p>Automatically searches CourtListener's database of legal opinions and precedents to inform responses</p>
+                <h4>📖 Legal Term Recognition</h4>
+                <p>Automatically identifies and defines legal terms using LexPredict's comprehensive dictionaries</p>
             </div>
             <div class="feature-card">
-                <h4>📄 Document Analysis</h4>
-                <p>Upload legal documents for context-aware assistance with drafting and analysis</p>
+                <h4>📄 Enhanced Legal Writing</h4>
+                <p>AI responses enriched with proper legal terminology and definitions from authoritative sources</p>
             </div>
         </div>
 
@@ -195,12 +253,12 @@
 
         <div class="chat-container" id="chatContainer">
             <div class="message bot-message">
-                <strong>Otterbot:</strong> Hello! I'm Otterbot, your legal AI assistant with access to CourtListener's legal database. I can help you draft legal documents, research case law, and provide legal guidance. Please set up your API keys above to get started!
+                <strong>Otterbot:</strong> Hello! I'm Otterbot, your legal AI assistant enhanced with LexPredict's legal dictionaries. I can help you draft legal documents, provide definitions of legal terms, and offer legal guidance using professional legal terminology. Please set up your API key and load the legal dictionaries above to get started!
             </div>
         </div>
 
         <div class="input-area">
-            <input type="text" id="messageInput" class="message-input" placeholder="Ask me to help with legal documents, research case law, or draft agreements..." />
+            <input type="text" id="messageInput" class="message-input" placeholder="Ask me about legal terms, help with drafting, or legal document analysis..." />
             <button class="btn send-btn" onclick="sendMessage()">Send</button>
         </div>
     </div>
@@ -208,62 +266,120 @@
     <script>
         // Global variables
         let geminiApiKey = localStorage.getItem('geminiApiKey') || '';
-        let courtListenerApiKey = localStorage.getItem('courtListenerApiKey') || '';
         let uploadedDocuments = [];
+        let legalDictionaries = {};
         let conversationHistory = [];
 
-        // CourtListener Service Class
-        class CourtListenerService {
-            constructor(apiKey = null) {
-                this.baseUrl = 'https://www.courtlistener.com/api/rest/v4';
-                this.apiKey = apiKey;
+        // LexPredict Legal Dictionary URLs (GitHub raw content)
+        const DICTIONARY_URLS = {
+            common_law: 'https://raw.githubusercontent.com/LexPredict/lexpredict-legal-dictionary/master/en/legal/common_US_terms_top1000.csv',
+            us_code: 'https://raw.githubusercontent.com/LexPredict/lexpredict-legal-dictionary/master/en/legal/us_code_title_citations.csv',
+            courts: 'https://raw.githubusercontent.com/LexPredict/lexpredict-legal-dictionary/master/en/legal/us_courts.csv',
+            federal_acts: 'https://raw.githubusercontent.com/LexPredict/lexpredict-legal-dictionary/master/en/legal/us_federal_acts.csv',
+            accounting: 'https://raw.githubusercontent.com/LexPredict/lexpredict-legal-dictionary/master/en/accounting/us_gaap.csv',
+            financial: 'https://raw.githubusercontent.com/LexPredict/lexpredict-legal-dictionary/master/en/financial/financial_common_terms.csv'
+        };
+
+        // Legal Dictionary Service
+        class LegalDictionary {
+            constructor() {
+                this.dictionaries = {};
+                this.loadedCount = 0;
             }
 
-            async searchCaseLaw(query, options = {}) {
-                const params = new URLSearchParams({
-                    q: query,
-                    type: 'o',
-                    order_by: 'score desc',
-                    ...options
-                });
-
+            async loadDictionary(name, url) {
                 try {
-                    const response = await fetch(`${this.baseUrl}/search/?${params}`, {
-                        headers: this.apiKey ? {
-                            'Authorization': `Token ${this.apiKey}`
-                        } : {}
-                    });
-                    
+                    const response = await fetch(url);
                     if (!response.ok) {
-                        throw new Error(`API request failed: ${response.status}`);
+                        throw new Error(`Failed to load ${name}: ${response.status}`);
                     }
                     
-                    return await response.json();
+                    const csvText = await response.text();
+                    const terms = this.parseCSV(csvText);
+                    this.dictionaries[name] = terms;
+                    this.loadedCount++;
+                    
+                    // Update UI
+                    const element = document.querySelector(`[data-dict="${name}"]`);
+                    if (element) {
+                        element.classList.add('loaded');
+                        element.innerHTML += ` ✓ (${terms.length} terms)`;
+                    }
+                    
+                    return terms;
                 } catch (error) {
-                    console.error('CourtListener search error:', error);
-                    return null;
+                    console.error(`Error loading ${name} dictionary:`, error);
+                    const element = document.querySelector(`[data-dict="${name}"]`);
+                    if (element) {
+                        element.style.background = '#f8d7da';
+                        element.innerHTML += ' ✗ (Error)';
+                    }
+                    return [];
                 }
             }
 
-            extractLegalContext(searchResults) {
-                if (!searchResults || !searchResults.results) {
-                    return '';
-                }
-
-                const relevantCases = searchResults.results.slice(0, 3);
+            parseCSV(csvText) {
+                const lines = csvText.split('\n');
+                const terms = [];
                 
-                return relevantCases.map(result => {
-                    return `Case: ${result.caseName || 'N/A'}
-Court: ${result.court || 'N/A'}
-Date: ${result.dateFiled || 'N/A'}
-Summary: ${result.snippet || 'N/A'}
----`;
-                }).join('\n');
+                for (let i = 1; i < lines.length; i++) { // Skip header
+                    const line = lines[i].trim();
+                    if (line) {
+                        const columns = line.split(',');
+                        if (columns.length > 0) {
+                            const term = columns[0].replace(/"/g, '').trim();
+                            const definition = columns.length > 1 ? columns[1].replace(/"/g, '').trim() : '';
+                            if (term) {
+                                terms.push({ term, definition });
+                            }
+                        }
+                    }
+                }
+                
+                return terms;
+            }
+
+            findLegalTerms(text) {
+                const foundTerms = [];
+                const lowerText = text.toLowerCase();
+                
+                Object.keys(this.dictionaries).forEach(dictName => {
+                    this.dictionaries[dictName].forEach(entry => {
+                        const term = entry.term.toLowerCase();
+                        if (lowerText.includes(term) && term.length > 3) { // Only longer terms
+                            foundTerms.push({
+                                term: entry.term,
+                                definition: entry.definition,
+                                dictionary: dictName
+                            });
+                        }
+                    });
+                });
+                
+                // Remove duplicates and sort by term length (longer first)
+                const uniqueTerms = foundTerms.filter((term, index, self) => 
+                    index === self.findIndex(t => t.term.toLowerCase() === term.term.toLowerCase())
+                ).sort((a, b) => b.term.length - a.term.length);
+                
+                return uniqueTerms.slice(0, 10); // Limit to top 10 terms
+            }
+
+            getAllTermsText() {
+                let allTerms = '';
+                Object.keys(this.dictionaries).forEach(dictName => {
+                    const terms = this.dictionaries[dictName].map(entry => entry.term).join(', ');
+                    allTerms += `${dictName.replace('_', ' ').toUpperCase()}: ${terms}\n\n`;
+                });
+                return allTerms;
+            }
+
+            isLoaded() {
+                return Object.keys(this.dictionaries).length > 0;
             }
         }
 
-        // Initialize services
-        const courtListener = new CourtListenerService(courtListenerApiKey);
+        // Initialize Legal Dictionary
+        const legalDict = new LegalDictionary();
 
         // API Key Management
         function saveGeminiKey() {
@@ -276,15 +392,50 @@ Summary: ${result.snippet || 'N/A'}
             }
         }
 
-        function saveCourtListenerKey() {
-            const key = document.getElementById('courtListenerApiKey').value;
-            if (key) {
-                courtListenerApiKey = key;
-                localStorage.setItem('courtListenerApiKey', key);
-                courtListener.apiKey = key;
-                showStatus('CourtListener API key saved successfully!', 'success');
-                document.getElementById('courtListenerApiKey').value = '';
+        // Legal Dictionary Management
+        async function loadLegalDictionaries() {
+            const loadButton = document.querySelector('button[onclick="loadLegalDictionaries()"]');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const statusElement = document.getElementById('dictionaryLoadStatus');
+            
+            loadButton.disabled = true;
+            loadingIndicator.style.display = 'inline-block';
+            statusElement.textContent = 'Loading dictionaries...';
+            
+            try {
+                const loadPromises = Object.entries(DICTIONARY_URLS).map(([name, url]) => 
+                    legalDict.loadDictionary(name, url)
+                );
+                
+                await Promise.all(loadPromises);
+                
+                statusElement.textContent = `Loaded ${legalDict.loadedCount} dictionaries successfully!`;
+                showStatus(`Legal dictionaries loaded! ${legalDict.loadedCount} dictionaries available.`, 'success');
+                
+            } catch (error) {
+                console.error('Error loading dictionaries:', error);
+                statusElement.textContent = 'Error loading some dictionaries';
+                showStatus('Some dictionaries failed to load. Check console for details.', 'error');
+            } finally {
+                loadButton.disabled = false;
+                loadingIndicator.style.display = 'none';
             }
+        }
+
+        function clearDictionaries() {
+            legalDict.dictionaries = {};
+            legalDict.loadedCount = 0;
+            
+            // Reset UI
+            document.querySelectorAll('.dictionary-item').forEach(item => {
+                item.classList.remove('loaded');
+                item.style.background = '';
+                const name = item.getAttribute('data-dict');
+                item.textContent = item.textContent.split(' ✓')[0].split(' ✗')[0];
+            });
+            
+            document.getElementById('dictionaryLoadStatus').textContent = 'Not loaded';
+            showStatus('Legal dictionaries cleared.', 'success');
         }
 
         // Document Management
@@ -365,7 +516,7 @@ Summary: ${result.snippet || 'N/A'}
 
             try {
                 // Show loading
-                const loadingElement = addMessageToChat('Searching legal database and generating response...', 'bot');
+                const loadingElement = addMessageToChat('Analyzing legal terms and generating response...', 'bot');
                 
                 const response = await processLegalQuery(message, uploadedDocuments);
                 
@@ -382,11 +533,11 @@ Summary: ${result.snippet || 'N/A'}
         }
 
         async function processLegalQuery(userMessage, uploadedDocs = []) {
-            // Analyze query and search for legal context
-            const legalContext = await searchLegalContext(userMessage);
+            // Find legal terms in the user's message
+            const foundTerms = legalDict.isLoaded() ? legalDict.findLegalTerms(userMessage) : [];
             
-            // Build enhanced prompt
-            const enhancedPrompt = buildEnhancedPrompt(userMessage, legalContext, uploadedDocs);
+            // Build enhanced prompt with legal dictionary context
+            const enhancedPrompt = buildEnhancedLegalPrompt(userMessage, foundTerms, uploadedDocs);
             
             // Send to Gemini API
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiApiKey}`, {
@@ -408,45 +559,54 @@ Summary: ${result.snippet || 'N/A'}
             }
 
             const data = await response.json();
-            return data.candidates[0].content.parts[0].text;
-        }
-
-        async function searchLegalContext(query) {
-            try {
-                // Extract legal keywords for search
-                const legalKeywords = extractLegalKeywords(query);
-                const searchResults = await courtListener.searchCaseLaw(legalKeywords);
-                return courtListener.extractLegalContext(searchResults);
-            } catch (error) {
-                console.error('Legal search error:', error);
-                return '';
+            let aiResponse = data.candidates[0].content.parts[0].text;
+            
+            // Add legal terms highlight if terms were found
+            if (foundTerms.length > 0) {
+                const termsText = foundTerms.map(term => 
+                    `<strong>${term.term}</strong>: ${term.definition || 'Legal term identified'}`
+                ).join('<br>');
+                
+                aiResponse += `\n\n<div class="legal-terms-highlight">
+                    <strong>📖 Legal Terms Identified:</strong><br>
+                    ${termsText}
+                </div>`;
             }
+            
+            return aiResponse;
         }
 
-        function extractLegalKeywords(text) {
-            const keywords = text.match(/\b(contract|agreement|liability|damages|jurisdiction|breach|terms|conditions|dispute|arbitration|negotiation|business|client|draft|legal)\b/gi);
-            return keywords ? keywords.join(' ') : text;
-        }
+        function buildEnhancedLegalPrompt(userMessage, foundTerms, uploadedDocs) {
+            let prompt = `You are Otterbot, a legal AI assistant specialized in helping legal professionals with document drafting and legal guidance.
 
-        function buildEnhancedPrompt(userMessage, legalContext, uploadedDocs) {
-            return `You are Otterbot, a legal AI assistant specialized in helping legal professionals draft documents and provide legal guidance.
+USER REQUEST: ${userMessage}`;
 
-USER REQUEST: ${userMessage}
+            if (legalDict.isLoaded()) {
+                prompt += `\n\nLEGAL DICTIONARY CONTEXT:
+You have access to comprehensive legal dictionaries including Common Law terms, US Code, Courts, Federal Acts, Accounting terms, and Financial terms from LexPredict.`;
 
-LEGAL PRECEDENTS AND CONTEXT:
-${legalContext || 'No specific legal precedents found for this query.'}
+                if (foundTerms.length > 0) {
+                    prompt += `\n\nIDENTIFIED LEGAL TERMS IN USER'S MESSAGE:
+${foundTerms.map(term => `- ${term.term}: ${term.definition || 'Legal term from ' + term.dictionary}`).join('\n')}`;
+                }
+            }
 
-UPLOADED DOCUMENTS CONTEXT:
-${uploadedDocs.map(doc => `Document: ${doc.name}\nContent: ${doc.content?.substring(0, 500)}...`).join('\n\n') || 'No documents uploaded.'}
+            if (uploadedDocs.length > 0) {
+                prompt += `\n\nUPLOADED DOCUMENTS CONTEXT:
+${uploadedDocs.map(doc => `Document: ${doc.name}\nContent Preview: ${doc.content?.substring(0, 500)}...`).join('\n\n')}`;
+            }
 
-INSTRUCTIONS:
-1. Use the legal precedents above to inform your response with proper legal language and structure
-2. Reference relevant case law where appropriate
-3. Ensure compliance with standard legal document formatting
-4. Include necessary legal disclaimers
-5. Provide practical, actionable guidance
+            prompt += `\n\nINSTRUCTIONS:
+1. Use proper legal terminology and professional language
+2. Reference specific legal terms and their definitions when relevant
+3. Provide practical, actionable legal guidance
+4. Ensure document formatting follows legal standards
+5. Include appropriate legal disclaimers
+6. Be precise and accurate in legal terminology usage
 
-Please provide a comprehensive response that incorporates the legal context provided above.`;
+Please provide a comprehensive response that incorporates proper legal terminology and professional standards.`;
+
+            return prompt;
         }
 
         function addMessageToChat(message, sender) {
@@ -485,9 +645,6 @@ Please provide a comprehensive response that incorporates the legal context prov
         document.addEventListener('DOMContentLoaded', function() {
             if (geminiApiKey) {
                 showStatus('Gemini API key loaded from storage.', 'success');
-            }
-            if (courtListenerApiKey) {
-                showStatus('CourtListener API key loaded from storage.', 'success');
             }
         });
     </script>
