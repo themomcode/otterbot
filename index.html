@@ -2,526 +2,494 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Otterbot - AI Chatbot</title>
+    <title>Otterbot - Legal AI Assistant</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: #f0f0f0;
+            background-color: #f5f5f5;
         }
-        
-        h1 {
-            text-align: center;
-            color: #333;
-        }
-        
-        #api-key-setup {
-            max-width: 600px;
-            margin: 0 auto 20px auto;
-            background-color: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 5px;
-            padding: 15px;
-        }
-
-        #document-upload-section {
-            max-width: 600px;
-            margin: 0 auto 20px auto;
-            background-color: #e8f4fd;
-            border: 1px solid #bee5eb;
-            border-radius: 5px;
-            padding: 15px;
-        }
-
-        #document-upload-section h3 {
-            margin-top: 0;
-            color: #0c5460;
-        }
-
-        #upload-area {
-            margin-bottom: 15px;
-        }
-
-        #document-upload {
-            margin-right: 10px;
-            padding: 5px;
-        }
-
-        #upload-btn, #clear-docs-btn {
-            padding: 8px 15px;
-            margin-right: 10px;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-        }
-
-        #upload-btn {
-            background-color: #17a2b8;
-            color: white;
-        }
-
-        #upload-btn:disabled {
-            background-color: #6c757d;
-            cursor: not-allowed;
-        }
-
-        #clear-docs-btn {
-            background-color: #dc3545;
-            color: white;
-        }
-
-        #clear-docs-btn:disabled {
-            background-color: #6c757d;
-            cursor: not-allowed;
-        }
-
-        #uploaded-docs {
-            margin-top: 15px;
-        }
-
-        #docs-list {
-            margin: 10px 0;
-            padding-left: 20px;
-        }
-
-        #docs-list li {
-            margin: 5px 0;
-            color: #155724;
-        }
-
-        #upload-status {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 3px;
-            display: none;
-        }
-
-        .status-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .status-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        #api-key-input {
-            width: 70%;
-            padding: 8px;
-            margin-right: 10px;
-            border: 1px solid #ddd;
-            border-radius: 3px;
-        }
-        
-        #save-key-btn {
-            padding: 8px 15px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-        }
-        
-        #chatbot-container {
-            max-width: 600px;
+        .container {
+            max-width: 1200px;
             margin: 0 auto;
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            overflow: hidden;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        
-        #chat-dialog {
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        .setup-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .api-input {
+            width: 300px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .btn {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        .legal-features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .feature-card {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #2196f3;
+        }
+        .chat-container {
+            border: 1px solid #ddd;
+            border-radius: 8px;
             height: 400px;
             overflow-y: auto;
             padding: 20px;
-            border-bottom: 1px solid #eee;
+            background: #fafafa;
+            margin-bottom: 20px;
         }
-        
         .message {
             margin-bottom: 15px;
-            padding: 10px;
-            border-radius: 5px;
+            padding: 12px;
+            border-radius: 8px;
         }
-        
         .user-message {
-            background-color: #007bff;
-            color: white;
+            background: #e3f2fd;
             text-align: right;
-            margin-left: 50px;
         }
-        
         .bot-message {
-            background-color: #f1f1f1;
-            color: #333;
-            margin-right: 50px;
+            background: #f1f8e9;
         }
-        
-        .error-message {
-            background-color: #f8d7da;
-            color: #721c24;
-            margin-right: 50px;
+        .legal-context {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 0.9em;
         }
-        
-        #input-area {
-            padding: 20px;
+        .input-area {
             display: flex;
             gap: 10px;
         }
-        
-        #user-input {
+        .message-input {
             flex: 1;
-            padding: 10px;
+            padding: 12px;
             border: 1px solid #ddd;
-            border-radius: 5px;
+            border-radius: 4px;
             font-size: 16px;
         }
-        
-        #send-button {
-            padding: 10px 20px;
-            background-color: #007bff;
+        .send-btn {
+            padding: 12px 24px;
+        }
+        .document-upload {
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .uploaded-docs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .doc-tag {
+            background: #28a745;
             color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
         }
-        
-        #send-button:hover {
-            background-color: #0056b3;
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
         }
-        
-        #send-button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
         }
-        
-        .loading {
-            font-style: italic;
-            color: #666;
-        }
-        
-        .setup-complete {
-            background-color: #d4edda !important;
-            border-color: #c3e6cb !important;
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
         }
     </style>
 </head>
 <body>
-    <h1>Otterbot Test</h1>
-    
-    <div id="api-key-setup">
-        <strong>Setup Required:</strong> Enter your free Gemini API key to start chatting
-        <br><br>
-        <input type="password" id="api-key-input" placeholder="Enter your Gemini API key...">
-        <button id="save-key-btn" onclick="saveApiKey()">Save Key</button>
-        <br><br>
-        <small>Get your free key at: <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a></small>
-    </div>
+    <div class="container">
+        <div class="header">
+            <h1>🦦 Otterbot - Legal AI Assistant</h1>
+            <p>AI-powered legal document assistant with CourtListener integration</p>
+        </div>
 
-    <div id="document-upload-section">
-        <h3>📄 Upload Legal Documents for Reference</h3>
-        <div id="upload-area">
-            <input type="file" id="document-upload" accept=".pdf,.doc,.docx,.txt" multiple>
-            <button id="upload-btn" onclick="uploadDocuments()" disabled>Upload Documents</button>
-            <button id="clear-docs-btn" onclick="clearDocuments()" disabled>Clear All Documents</button>
-        </div>
-        <div id="uploaded-docs">
-            <strong>Uploaded Documents:</strong>
-            <ul id="docs-list"></ul>
-        </div>
-        <div id="upload-status"></div>
-    </div>
-    
-    <div id="chatbot-container">
-        <div id="chat-dialog">
-            <div class="message bot-message">
-                Hello! I'm Otterbot, your legal language learning assistant. Please set up your API key above to start chatting!
+        <div class="setup-section">
+            <h3>🔧 Setup Required:</h3>
+            <div style="margin-bottom: 15px;">
+                <input type="password" id="geminiApiKey" class="api-input" placeholder="Enter Gemini API Key" />
+                <button class="btn" onclick="saveGeminiKey()">Save Gemini Key</button>
+                <small>Get your free key at: <a href="https://makersuite.google.com/app/apikey" target="_blank">Google AI Studio</a></small>
+            </div>
+            <div>
+                <input type="password" id="courtListenerApiKey" class="api-input" placeholder="CourtListener API Key (Optional)" />
+                <button class="btn btn-secondary" onclick="saveCourtListenerKey()">Save CourtListener Key</button>
+                <small>Register at: <a href="https://www.courtlistener.com/api/" target="_blank">CourtListener API</a></small>
             </div>
         </div>
-        <div id="input-area">
-            <input type="text" id="user-input" placeholder="Type your message..." onkeypress="handleKeyPress(event)" disabled>
-            <button id="send-button" onclick="sendMessage()" disabled>Send</button>
+
+        <div class="legal-features">
+            <div class="feature-card">
+                <h4>📚 Legal Research Integration</h4>
+                <p>Automatically searches CourtListener's database of legal opinions and precedents to inform responses</p>
+            </div>
+            <div class="feature-card">
+                <h4>📄 Document Analysis</h4>
+                <p>Upload legal documents for context-aware assistance with drafting and analysis</p>
+            </div>
+        </div>
+
+        <div class="document-upload">
+            <h4>📄 Upload Legal Documents for Reference</h4>
+            <input type="file" id="fileInput" accept=".pdf,.txt,.doc,.docx" multiple style="margin-bottom: 10px;">
+            <br>
+            <button class="btn" onclick="uploadDocuments()">Upload Documents</button>
+            <button class="btn btn-secondary" onclick="clearDocuments()">Clear All Documents</button>
+            
+            <div class="uploaded-docs" id="uploadedDocsList">
+                <p>Uploaded Documents: <span id="docCount">0</span></p>
+            </div>
+        </div>
+
+        <div id="statusMessage"></div>
+
+        <div class="chat-container" id="chatContainer">
+            <div class="message bot-message">
+                <strong>Otterbot:</strong> Hello! I'm Otterbot, your legal AI assistant with access to CourtListener's legal database. I can help you draft legal documents, research case law, and provide legal guidance. Please set up your API keys above to get started!
+            </div>
+        </div>
+
+        <div class="input-area">
+            <input type="text" id="messageInput" class="message-input" placeholder="Ask me to help with legal documents, research case law, or draft agreements..." />
+            <button class="btn send-btn" onclick="sendMessage()">Send</button>
         </div>
     </div>
 
     <script>
-        let apiKey = '';
+        // Global variables
+        let geminiApiKey = localStorage.getItem('geminiApiKey') || '';
+        let courtListenerApiKey = localStorage.getItem('courtListenerApiKey') || '';
         let uploadedDocuments = [];
-        const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
-        
-        // Legal-focused system prompt
-        const LEGAL_SYSTEM_PROMPT = `You are Otterbot, an AI assistant specialized in legal language and communication. 
-        Your primary functions are:
-        1. Help users understand legal terminology and concepts
-        2. Analyze legal language patterns and structures  
-        3. Assist with legal document comprehension
-        4. Provide educational information about legal communication
-        
-        Always maintain a professional tone and clarify that you provide educational information only, 
-        not legal advice. Keep responses concise and helpful.`;
-        
-        function saveApiKey() {
-            const keyInput = document.getElementById('api-key-input');
-            const setupDiv = document.getElementById('api-key-setup');
-            const userInput = document.getElementById('user-input');
-            const sendButton = document.getElementById('send-button');
-            const uploadBtn = document.getElementById('upload-btn');
-            const clearDocsBtn = document.getElementById('clear-docs-btn');
-            
-            apiKey = keyInput.value.trim();
-            
-            if (apiKey) {
-                // Store in session (not persistent for security)
-                setupDiv.classList.add('setup-complete');
-                setupDiv.innerHTML = '<strong>✓ API Key Set!</strong> You can now chat with Otterbot and upload documents.';
+        let conversationHistory = [];
+
+        // CourtListener Service Class
+        class CourtListenerService {
+            constructor(apiKey = null) {
+                this.baseUrl = 'https://www.courtlistener.com/api/rest/v4';
+                this.apiKey = apiKey;
+            }
+
+            async searchCaseLaw(query, options = {}) {
+                const params = new URLSearchParams({
+                    q: query,
+                    type: 'o',
+                    order_by: 'score desc',
+                    ...options
+                });
+
+                try {
+                    const response = await fetch(`${this.baseUrl}/search/?${params}`, {
+                        headers: this.apiKey ? {
+                            'Authorization': `Token ${this.apiKey}`
+                        } : {}
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`API request failed: ${response.status}`);
+                    }
+                    
+                    return await response.json();
+                } catch (error) {
+                    console.error('CourtListener search error:', error);
+                    return null;
+                }
+            }
+
+            extractLegalContext(searchResults) {
+                if (!searchResults || !searchResults.results) {
+                    return '';
+                }
+
+                const relevantCases = searchResults.results.slice(0, 3);
                 
-                // Enable chat interface and document upload
-                userInput.disabled = false;
-                sendButton.disabled = false;
-                uploadBtn.disabled = false;
-                clearDocsBtn.disabled = false;
-                userInput.focus();
-                
-                addMessage("Great! I'm now connected and ready to help with legal language learning. You can also upload legal documents to help me learn proper syntax and vocabulary!", false);
-            } else {
-                alert('Please enter a valid API key');
+                return relevantCases.map(result => {
+                    return `Case: ${result.caseName || 'N/A'}
+Court: ${result.court || 'N/A'}
+Date: ${result.dateFiled || 'N/A'}
+Summary: ${result.snippet || 'N/A'}
+---`;
+                }).join('\n');
             }
         }
 
+        // Initialize services
+        const courtListener = new CourtListenerService(courtListenerApiKey);
+
+        // API Key Management
+        function saveGeminiKey() {
+            const key = document.getElementById('geminiApiKey').value;
+            if (key) {
+                geminiApiKey = key;
+                localStorage.setItem('geminiApiKey', key);
+                showStatus('Gemini API key saved successfully!', 'success');
+                document.getElementById('geminiApiKey').value = '';
+            }
+        }
+
+        function saveCourtListenerKey() {
+            const key = document.getElementById('courtListenerApiKey').value;
+            if (key) {
+                courtListenerApiKey = key;
+                localStorage.setItem('courtListenerApiKey', key);
+                courtListener.apiKey = key;
+                showStatus('CourtListener API key saved successfully!', 'success');
+                document.getElementById('courtListenerApiKey').value = '';
+            }
+        }
+
+        // Document Management
         async function uploadDocuments() {
-            const fileInput = document.getElementById('document-upload');
-            const uploadStatus = document.getElementById('upload-status');
-            const docsList = document.getElementById('docs-list');
-            
-            if (fileInput.files.length === 0) {
-                showUploadStatus('Please select at least one document to upload.', false);
+            const fileInput = document.getElementById('fileInput');
+            const files = fileInput.files;
+
+            if (files.length === 0) {
+                showStatus('Please select files to upload.', 'error');
                 return;
             }
-            
-            showUploadStatus('Processing documents...', true);
-            
-            try {
-                for (let file of fileInput.files) {
-                    const content = await readFileContent(file);
-                    const processedDoc = {
+
+            for (let file of files) {
+                try {
+                    const text = await readFileAsText(file);
+                    uploadedDocuments.push({
                         name: file.name,
+                        content: text,
                         type: file.type,
-                        size: file.size,
-                        content: content,
-                        uploadedAt: new Date().toISOString()
-                    };
-                    
-                    uploadedDocuments.push(processedDoc);
-                    
-                    // Add to display list
-                    const listItem = document.createElement('li');
-                    listItem.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
-                    docsList.appendChild(listItem);
+                        size: file.size
+                    });
+                } catch (error) {
+                    console.error('Error reading file:', error);
+                    showStatus(`Error reading file: ${file.name}`, 'error');
                 }
-                
-                showUploadStatus(`Successfully uploaded ${fileInput.files.length} document(s)! The AI can now reference this content for legal language learning.`, true);
-                
-                // Clear file input
-                fileInput.value = '';
-                
-                // Add notification to chat
-                addMessage(`📄 ${fileInput.files.length} legal document(s) uploaded successfully! I can now reference this content to better understand legal syntax and vocabulary. Ask me questions about the documents or legal language patterns!`, false);
-                
-            } catch (error) {
-                console.error('Error uploading documents:', error);
-                showUploadStatus('Error processing documents. Please try again.', false);
             }
+
+            updateDocumentsList();
+            showStatus(`${files.length} document(s) uploaded successfully!`, 'success');
+            fileInput.value = '';
         }
 
-        async function readFileContent(file) {
+        function readFileAsText(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
-                
-                reader.onload = function(e) {
-                    resolve(e.target.result);
-                };
-                
-                reader.onerror = function() {
-                    reject(new Error('Failed to read file'));
-                };
-                
-                // Read as text for most formats
-                if (file.type.includes('text') || file.name.endsWith('.txt')) {
-                    reader.readAsText(file);
-                } else {
-                    // For other formats, we'll read as text and handle what we can
-                    reader.readAsText(file);
-                }
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = (e) => reject(e);
+                reader.readAsText(file);
             });
         }
 
         function clearDocuments() {
             uploadedDocuments = [];
-            const docsList = document.getElementById('docs-list');
-            docsList.innerHTML = '';
-            
-            showUploadStatus('All documents cleared.', true);
-            addMessage('📄 All uploaded documents have been cleared from memory.', false);
+            updateDocumentsList();
+            showStatus('All documents cleared.', 'success');
         }
 
-        function showUploadStatus(message, isSuccess) {
-            const uploadStatus = document.getElementById('upload-status');
-            uploadStatus.textContent = message;
-            uploadStatus.className = isSuccess ? 'status-success' : 'status-error';
-            uploadStatus.style.display = 'block';
+        function updateDocumentsList() {
+            const docsList = document.getElementById('uploadedDocsList');
+            const docCount = document.getElementById('docCount');
             
-            // Hide after 5 seconds
-            setTimeout(() => {
-                uploadStatus.style.display = 'none';
-            }, 5000);
-        }
-
-        function getDocumentContext() {
-            if (uploadedDocuments.length === 0) return '';
+            docCount.textContent = uploadedDocuments.length;
             
-            let context = '\n\nREFERENCE DOCUMENTS:\n';
-            context += 'The user has uploaded the following legal documents for reference. Use these to understand proper legal syntax, vocabulary, and language patterns:\n\n';
-            
-            uploadedDocuments.forEach((doc, index) => {
-                context += `Document ${index + 1}: ${doc.name}\n`;
-                context += `Content excerpt: ${doc.content.substring(0, 2000)}...\n\n`; // Limit content to avoid token limits
-            });
-            
-            context += 'Please reference these documents when explaining legal language, syntax, or vocabulary. Use similar language patterns and terminology when appropriate.';
-            
-            return context;
-        }
-        
-        function addMessage(message, isUser = false, isError = false) {
-            const chatDialog = document.getElementById('chat-dialog');
-            const messageDiv = document.createElement('div');
-            
-            if (isError) {
-                messageDiv.className = 'message error-message';
+            if (uploadedDocuments.length > 0) {
+                const docTags = uploadedDocuments.map(doc => 
+                    `<span class="doc-tag">${doc.name}</span>`
+                ).join('');
+                docsList.innerHTML = `<p>Uploaded Documents (${uploadedDocuments.length}):</p><div>${docTags}</div>`;
             } else {
-                messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
-            }
-            
-            messageDiv.textContent = message;
-            chatDialog.appendChild(messageDiv);
-            
-            // Scroll to bottom
-            chatDialog.scrollTop = chatDialog.scrollHeight;
-        }
-        
-        function handleKeyPress(event) {
-            if (event.key === 'Enter') {
-                sendMessage();
+                docsList.innerHTML = '<p>Uploaded Documents: 0</p>';
             }
         }
-        
+
+        // Chat Functionality
         async function sendMessage() {
-            if (!apiKey) {
-                addMessage('Please set up your API key first!', false, true);
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+
+            if (!message) return;
+            if (!geminiApiKey) {
+                showStatus('Please set up your Gemini API key first.', 'error');
                 return;
             }
-            
-            const userInput = document.getElementById('user-input');
-            const sendButton = document.getElementById('send-button');
-            const message = userInput.value.trim();
-            
-            if (!message) return;
-            
+
             // Add user message to chat
-            addMessage(message, true);
-            
-            // Clear input and disable button
-            userInput.value = '';
-            sendButton.disabled = true;
-            sendButton.textContent = 'Sending...';
-            
-            // Add loading message
-            const loadingDiv = document.createElement('div');
-            loadingDiv.className = 'message bot-message loading';
-            loadingDiv.textContent = 'Otterbot is thinking...';
-            loadingDiv.id = 'loading-message';
-            document.getElementById('chat-dialog').appendChild(loadingDiv);
-            
+            addMessageToChat(message, 'user');
+            messageInput.value = '';
+
             try {
-                // Create the prompt with document context
-                const documentContext = getDocumentContext();
-                const fullPrompt = `${LEGAL_SYSTEM_PROMPT}${documentContext}\n\nUser message: ${message}\n\nPlease respond helpfully while focusing on legal language learning and communication. If relevant, reference the uploaded documents to provide examples of proper legal syntax and vocabulary.`;
+                // Show loading
+                const loadingElement = addMessageToChat('Searching legal database and generating response...', 'bot');
                 
-                // Call Gemini API directly
-                const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [{
-                                text: fullPrompt
-                            }]
-                        }]
-                    })
-                });
+                const response = await processLegalQuery(message, uploadedDocuments);
                 
                 // Remove loading message
-                const loadingMessage = document.getElementById('loading-message');
-                if (loadingMessage) {
-                    loadingMessage.remove();
-                }
+                loadingElement.remove();
                 
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('API Response:', data); // Debug log
-                    
-                    if (data.candidates && data.candidates[0] && data.candidates[0].content) {
-                        const botResponse = data.candidates[0].content.parts[0].text;
-                        addMessage(botResponse);
-                    } else {
-                        console.log('Unexpected response format:', data);
-                        addMessage('Sorry, I received an unexpected response format. Check console for details.', false, true);
-                    }
-                } else {
-                    const errorData = await response.json();
-                    console.error('API Error Details:', errorData);
-                    console.error('Status Code:', response.status);
-                    
-                    let errorMessage = '';
-                    if (response.status === 400) {
-                        errorMessage = `API Error (400): ${errorData.error?.message || 'Bad request - check your API key'}`;
-                    } else if (response.status === 403) {
-                        errorMessage = `API Error (403): ${errorData.error?.message || 'Forbidden - check your API key permissions'}`;
-                    } else if (response.status === 429) {
-                        errorMessage = 'Rate limit exceeded. Please wait a minute and try again.';
-                    } else {
-                        errorMessage = `Error (${response.status}): ${errorData.error?.message || 'Unknown error occurred'}`;
-                    }
-                    
-                    addMessage(errorMessage, false, true);
-                }
+                // Add bot response
+                addMessageToChat(response, 'bot');
                 
             } catch (error) {
                 console.error('Error:', error);
-                
-                // Remove loading message
-                const loadingMessage = document.getElementById('loading-message');
-                if (loadingMessage) {
-                    loadingMessage.remove();
-                }
-                
-                addMessage('Sorry, I\'m having trouble connecting right now. Please check your internet connection and try again.', false, true);
-            } finally {
-                // Re-enable button
-                sendButton.disabled = false;
-                sendButton.textContent = 'Send';
-                userInput.focus();
+                showStatus('Error processing your message. Please try again.', 'error');
             }
         }
+
+        async function processLegalQuery(userMessage, uploadedDocs = []) {
+            // Analyze query and search for legal context
+            const legalContext = await searchLegalContext(userMessage);
+            
+            // Build enhanced prompt
+            const enhancedPrompt = buildEnhancedPrompt(userMessage, legalContext, uploadedDocs);
+            
+            // Send to Gemini API
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiApiKey}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{
+                            text: enhancedPrompt
+                        }]
+                    }]
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Gemini API error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return data.candidates[0].content.parts[0].text;
+        }
+
+        async function searchLegalContext(query) {
+            try {
+                // Extract legal keywords for search
+                const legalKeywords = extractLegalKeywords(query);
+                const searchResults = await courtListener.searchCaseLaw(legalKeywords);
+                return courtListener.extractLegalContext(searchResults);
+            } catch (error) {
+                console.error('Legal search error:', error);
+                return '';
+            }
+        }
+
+        function extractLegalKeywords(text) {
+            const keywords = text.match(/\b(contract|agreement|liability|damages|jurisdiction|breach|terms|conditions|dispute|arbitration|negotiation|business|client|draft|legal)\b/gi);
+            return keywords ? keywords.join(' ') : text;
+        }
+
+        function buildEnhancedPrompt(userMessage, legalContext, uploadedDocs) {
+            return `You are Otterbot, a legal AI assistant specialized in helping legal professionals draft documents and provide legal guidance.
+
+USER REQUEST: ${userMessage}
+
+LEGAL PRECEDENTS AND CONTEXT:
+${legalContext || 'No specific legal precedents found for this query.'}
+
+UPLOADED DOCUMENTS CONTEXT:
+${uploadedDocs.map(doc => `Document: ${doc.name}\nContent: ${doc.content?.substring(0, 500)}...`).join('\n\n') || 'No documents uploaded.'}
+
+INSTRUCTIONS:
+1. Use the legal precedents above to inform your response with proper legal language and structure
+2. Reference relevant case law where appropriate
+3. Ensure compliance with standard legal document formatting
+4. Include necessary legal disclaimers
+5. Provide practical, actionable guidance
+
+Please provide a comprehensive response that incorporates the legal context provided above.`;
+        }
+
+        function addMessageToChat(message, sender) {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            
+            if (sender === 'user') {
+                messageDiv.innerHTML = `<strong>You:</strong> ${message}`;
+            } else {
+                messageDiv.innerHTML = `<strong>Otterbot:</strong> ${message}`;
+            }
+            
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            return messageDiv;
+        }
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+            setTimeout(() => {
+                statusDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        // Event listeners
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            if (geminiApiKey) {
+                showStatus('Gemini API key loaded from storage.', 'success');
+            }
+            if (courtListenerApiKey) {
+                showStatus('CourtListener API key loaded from storage.', 'success');
+            }
+        });
     </script>
 </body>
 </html>
