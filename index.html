@@ -4,19 +4,195 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Index.html</title>
+    <title>Otterbot - AI Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        
+        #chatbot-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        #chat-dialog {
+            height: 400px;
+            overflow-y: auto;
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .user-message {
+            background-color: #007bff;
+            color: white;
+            text-align: right;
+            margin-left: 50px;
+        }
+        
+        .bot-message {
+            background-color: #f1f1f1;
+            color: #333;
+            margin-right: 50px;
+        }
+        
+        #input-area {
+            padding: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        #user-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        #send-button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        #send-button:hover {
+            background-color: #0056b3;
+        }
+        
+        #send-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .loading {
+            font-style: italic;
+            color: #666;
+        }
+    </style>
 </head>
 <body>
-    <p>This ia my first page.</p>
+    <h1>Otterbot Test</h1>
+    
+    <div id="chatbot-container">
+        <div id="chat-dialog">
+            <div class="message bot-message">
+                Hello! I'm Otterbot. How can I help you today?
+            </div>
+        </div>
+        <div id="input-area">
+            <input type="text" id="user-input" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
+            <button id="send-button" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        // Function to add a message to the chat dialog
+        function addMessage(message, isUser = false) {
+            const chatDialog = document.getElementById('chat-dialog');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+            messageDiv.textContent = message;
+            chatDialog.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            chatDialog.scrollTop = chatDialog.scrollHeight;
+        }
+        
+        // Function to handle Enter key press
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+        
+        // Main function to send message to Python backend
+        async function sendMessage() {
+            const userInput = document.getElementById('user-input');
+            const sendButton = document.getElementById('send-button');
+            const message = userInput.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message to chat
+            addMessage(message, true);
+            
+            // Clear input and disable button
+            userInput.value = '';
+            sendButton.disabled = true;
+            sendButton.textContent = 'Sending...';
+            
+            // Add loading message
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'message bot-message loading';
+            loadingDiv.textContent = 'Otterbot is thinking...';
+            loadingDiv.id = 'loading-message';
+            document.getElementById('chat-dialog').appendChild(loadingDiv);
+            
+            try {
+                // Send POST request to Python backend
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+                
+                // Remove loading message
+                const loadingMessage = document.getElementById('loading-message');
+                if (loadingMessage) {
+                    loadingMessage.remove();
+                }
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addMessage(data.response || 'Sorry, I didn\'t receive a proper response.');
+                } else {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                
+                // Remove loading message
+                const loadingMessage = document.getElementById('loading-message');
+                if (loadingMessage) {
+                    loadingMessage.remove();
+                }
+                
+                addMessage('Sorry, I\'m having trouble connecting right now. Please try again later.');
+            } finally {
+                // Re-enable button
+                sendButton.disabled = false;
+                sendButton.textContent = 'Send';
+                userInput.focus();
+            }
+        }
+    </script>
 </body>
 </html>
-
-<div id="chatbot-container">
-  <div id="chat-dialog">
-    <!-- Chat messages will appear here -->
-  </div>
-  <div id="input-area">
-    <input type="text" id="user-input" placeholder="Type your message...">
-    <button id="send-button">Send</button>
-  </div>
-</div>
