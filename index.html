@@ -18,6 +18,32 @@
             color: #333;
         }
         
+        #api-key-setup {
+            max-width: 600px;
+            margin: 0 auto 20px auto;
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 15px;
+        }
+        
+        #api-key-input {
+            width: 70%;
+            padding: 8px;
+            margin-right: 10px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+        
+        #save-key-btn {
+            padding: 8px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        
         #chatbot-container {
             max-width: 600px;
             margin: 0 auto;
@@ -50,6 +76,12 @@
         .bot-message {
             background-color: #f1f1f1;
             color: #333;
+            margin-right: 50px;
+        }
+        
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
             margin-right: 50px;
         }
         
@@ -90,29 +122,86 @@
             font-style: italic;
             color: #666;
         }
+        
+        .setup-complete {
+            background-color: #d4edda !important;
+            border-color: #c3e6cb !important;
+        }
     </style>
 </head>
 <body>
     <h1>Otterbot Test</h1>
     
+    <div id="api-key-setup">
+        <strong>Setup Required:</strong> Enter your free Gemini API key to start chatting
+        <br><br>
+        <input type="password" id="api-key-input" placeholder="Enter your Gemini API key...">
+        <button id="save-key-btn" onclick="saveApiKey()">Save Key</button>
+        <br><br>
+        <small>Get your free key at: <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a></small>
+    </div>
+    
     <div id="chatbot-container">
         <div id="chat-dialog">
             <div class="message bot-message">
-                Hello! I'm Otterbot. How can I help you today?
+                Hello! I'm Otterbot, your legal language learning assistant. Please set up your API key above to start chatting!
             </div>
         </div>
         <div id="input-area">
-            <input type="text" id="user-input" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
-            <button id="send-button" onclick="sendMessage()">Send</button>
+            <input type="text" id="user-input" placeholder="Type your message..." onkeypress="handleKeyPress(event)" disabled>
+            <button id="send-button" onclick="sendMessage()" disabled>Send</button>
         </div>
     </div>
 
     <script>
-        // Function to add a message to the chat dialog
-        function addMessage(message, isUser = false) {
+        let apiKey = '';
+        const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+        
+        // Legal-focused system prompt
+        const LEGAL_SYSTEM_PROMPT = `You are Otterbot, an AI assistant specialized in legal language and communication. 
+        Your primary functions are:
+        1. Help users understand legal terminology and concepts
+        2. Analyze legal language patterns and structures  
+        3. Assist with legal document comprehension
+        4. Provide educational information about legal communication
+        
+        Always maintain a professional tone and clarify that you provide educational information only, 
+        not legal advice. Keep responses concise and helpful.`;
+        
+        function saveApiKey() {
+            const keyInput = document.getElementById('api-key-input');
+            const setupDiv = document.getElementById('api-key-setup');
+            const userInput = document.getElementById('user-input');
+            const sendButton = document.getElementById('send-button');
+            
+            apiKey = keyInput.value.trim();
+            
+            if (apiKey) {
+                // Store in session (not persistent for security)
+                setupDiv.classList.add('setup-complete');
+                setupDiv.innerHTML = '<strong>✓ API Key Set!</strong> You can now chat with Otterbot.';
+                
+                // Enable chat interface
+                userInput.disabled = false;
+                sendButton.disabled = false;
+                userInput.focus();
+                
+                addMessage("Great! I'm now connected and ready to help with legal language learning. What would you like to know?", false);
+            } else {
+                alert('Please enter a valid API key');
+            }
+        }
+        
+        function addMessage(message, isUser = false, isError = false) {
             const chatDialog = document.getElementById('chat-dialog');
             const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+            
+            if (isError) {
+                messageDiv.className = 'message error-message';
+            } else {
+                messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+            }
+            
             messageDiv.textContent = message;
             chatDialog.appendChild(messageDiv);
             
@@ -120,15 +209,18 @@
             chatDialog.scrollTop = chatDialog.scrollHeight;
         }
         
-        // Function to handle Enter key press
         function handleKeyPress(event) {
             if (event.key === 'Enter') {
                 sendMessage();
             }
         }
         
-        // Main function to send message to Python backend
         async function sendMessage() {
+            if (!apiKey) {
+                addMessage('Please set up your API key first!', false, true);
+                return;
+            }
+            
             const userInput = document.getElementById('user-input');
             const sendButton = document.getElementById('send-button');
             const message = userInput.value.trim();
@@ -151,15 +243,21 @@
             document.getElementById('chat-dialog').appendChild(loadingDiv);
             
             try {
-                // Send POST request to Python backend
-                const response = await fetch('/chat', {
+                // Create the prompt
+                const fullPrompt = `${LEGAL_SYSTEM_PROMPT}\n\nUser message: ${message}\n\nPlease respond helpfully while focusing on legal language learning and communication.`;
+                
+                // Call Gemini API directly
+                const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        message: message,
-                        timestamp: new Date().toISOString()
+                        contents: [{
+                            parts: [{
+                                text: fullPrompt
+                            }]
+                        }]
                     })
                 });
                 
@@ -171,9 +269,22 @@
                 
                 if (response.ok) {
                     const data = await response.json();
-                    addMessage(data.response || 'Sorry, I didn\'t receive a proper response.');
+                    
+                    if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+                        const botResponse = data.candidates[0].content.parts[0].text;
+                        addMessage(botResponse);
+                    } else {
+                        addMessage('Sorry, I received an unexpected response format.', false, true);
+                    }
                 } else {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    const errorData = await response.json();
+                    console.error('API Error:', errorData);
+                    
+                    if (response.status === 400) {
+                        addMessage('API Error: Please check your API key or try again.', false, true);
+                    } else {
+                        addMessage(`Error: ${errorData.error?.message || 'Unknown error occurred'}`, false, true);
+                    }
                 }
                 
             } catch (error) {
@@ -185,7 +296,7 @@
                     loadingMessage.remove();
                 }
                 
-                addMessage('Sorry, I\'m having trouble connecting right now. Please try again later.');
+                addMessage('Sorry, I\'m having trouble connecting right now. Please check your internet connection and try again.', false, true);
             } finally {
                 // Re-enable button
                 sendButton.disabled = false;
