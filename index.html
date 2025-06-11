@@ -217,11 +217,12 @@
             
             <div class="dictionary-grid" id="dictionaryStatus">
                 <div class="dictionary-item" data-dict="common_law">Common Law Terms</div>
-                <div class="dictionary-item" data-dict="us_code">US Code Terms</div>
+                <div class="dictionary-item" data-dict="real_estate">Real Estate</div>
                 <div class="dictionary-item" data-dict="courts">US Courts</div>
                 <div class="dictionary-item" data-dict="federal_acts">Federal Acts</div>
                 <div class="dictionary-item" data-dict="accounting">Accounting Terms</div>
                 <div class="dictionary-item" data-dict="financial">Financial Terms</div>
+                <div class="dictionary-item" data-dict="us_state_code_citations">State Code Citations</div>
             </div>
             <p><small>Status: <span id="dictionaryLoadStatus">Not loaded</span></small></p>
         </div>
@@ -273,11 +274,12 @@
         // LexPredict Legal Dictionary URLs (GitHub raw content)
         const DICTIONARY_URLS = {
             common_law: 'https://raw.githubusercontent.com/LexPredict/lexpredict-legal-dictionary/master/en/legal/common_US_terms_top1000.csv',
-            us_code: 'https://raw.githubusercontent.com/LexPredict/lexpredict-legal-dictionary/master/en/legal/us_code_title_citations.csv',
             courts: 'https://raw.githubusercontent.com/LexPredict/lexpredict-legal-dictionary/master/en/legal/us_courts.csv',
             federal_acts: 'https://raw.githubusercontent.com/LexPredict/lexpredict-legal-dictionary/master/en/legal/us_federal_acts.csv',
             accounting: 'https://raw.githubusercontent.com/LexPredict/lexpredict-legal-dictionary/master/en/accounting/us_gaap.csv',
-            financial: 'https://raw.githubusercontent.com/LexPredict/lexpredict-legal-dictionary/master/en/financial/financial_common_terms.csv'
+            real_estate: 'https://raw.githubusercontent.com/LexPredict/lexpredict-legal-dictionary/master/en/legal/real_estate.csv',
+            financial: 'https://raw.githubusercontent.com/LexPredict/lexpredict-legal-dictionary/master/en/financial/financial.csv',
+            us_state_code_citations: 'https://raw.githubusercontent.com/LexPredict/lexpredict-legal-dictionary/master/en/financial/en/legal/us_state_code_citations.csv'
         };
 
         // Legal Dictionary Service
